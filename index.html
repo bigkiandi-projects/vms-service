@@ -22,38 +22,62 @@
       body {
         font-family: 'Noto Sans KR', sans-serif;
       }
-      .wind-speed {
-        background-color: #000;
+
+      .weather__card h2 {
+        font-size:340px;
+        font-weight:700;
+        color: #FFFF00;
+        line-height: 1.5;
       }
-      .wind-speed h1, span, i {
-        color: yellow;
-        font-size: 150px;
+      .weather__card h3 {
+        font-size: 170px;
+        font-weight: 600;
+        line-height: .8;
+        color: #00FF00;
       }
+      .weather__card h4 {
+        font-size: 170px;
+        font-weight: 600;
+        line-height: .5;
+        color: #00FF00;
+      }
+      .weather__card i {
+        color: #dfdfdf;
+      }
+
     </style>
   </head>
   <body style="background-color: #000 ;">
     
     <div class="text-center">
 
-          <div id="carouselExampleInterval" class="carousel slide carousel-fade" data-bs-ride="carousel">
+          <div id="crs" class="carousel slide" data-bs-ride="carousel" data-bs-pause="false">
             <div class="carousel-inner">
 
-              <div class="carousel-item active" data-bs-interval="3500" style="width:100%">
-                <img src="assets/upload/l1.jpeg" class="d-block w-100" alt="..." height="840">
+              <div class="carousel-item active" style="width:100%">
+                <img src="assets/upload/l1.jpg" class="d-block w-100" alt="..." height="840">
               </div>
 
-              <div class="carousel-item" data-bs-interval="3500" style="width:100%">
-                <img src="assets/upload/l2.jpeg" class="d-block w-100" alt="..." height="840">
+              <div class="carousel-item" style="width:100%">
+                <img src="assets/upload/l2.jpg" class="d-block w-100" alt="..." height="840">
               </div>
 
-              <div class="carousel-item non-img" data-bs-interval="3500" style="width:100%">
-                <div class="wind-speed" style="height: 840px; border: solid yellow 8px;">
-                  <h1>Kecepatan Angin</h1>
-                  <h1 class="wind-speed"><span class="speed"></span>
-                    <i class="fa-solid fa-wind"></i>
-                  </h1>
-                  <h1>Km / Jam</h1>
+              <div class="carousel-item" style="width:100%">
+
+                <div style="height: 840px; border: solid yellow 8px;">
+                  <div class="d-flex flex-row justify-content-center align-items-center">
+                      <div class="weather__card">
+                          <div class="d-flex flex-row justify-content-center align-items-center">
+                              <div class="p-1">
+                                  <h3>Kecepatan Angin</h3>
+                                  <h2><span class="speed">10</span> <i class="fa-solid fa-wind"></i></h2>
+                                  <h4>km/jam</h4>
+                              </div>
+                          </div>
+                      </div>
+                  </div>
                 </div>
+
               </div>
 
             </div>
@@ -88,6 +112,13 @@
         }, 500000);
 
       });
+
+      var myCarousel = document.querySelector('#crs');
+
+      var carousel = new bootstrap.Carousel(myCarousel, {
+        interval: 3000,
+      });
+
     </script>
     
   </body>
