@@ -1,0 +1,108 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <script src="https://code.jquery.com/jquery-3.6.4.min.js"></script>
+    <title>Real-time JSON GET with Table</title>
+</head>
+<body>
+
+<table border="1">
+  <thead>
+    <tr>
+      <th>Interval Start</th>
+      <th>Interval End</th>
+      <th>Average Wind Speed (m/s)</th>
+      <th>Average Wind Speed (km/h)</th>
+    </tr>
+  </thead>
+  <tbody id="tableBody"></tbody>
+</table>
+
+<script>
+    var api_url = 'http://36.89.95.146:5001/api/Data/648ad209761047d6a16aed60/sensors/last/08169466636709623LAN011';
+    var token = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJJZCI6IjY1MmU0MzgzNjc3ZjY4MTVlODA1MmM1OSIsImh0dHA6Ly9zY2hlbWFzLnhtbHNvYXAub3JnL3dzLzIwMDUvMDUvaWRlbnRpdHkvY2xhaW1zL2VtYWlsYWRkcmVzcyI6ImFkbWluIiwiaHR0cDovL3NjaGVtYXMueG1sc29hcC5vcmcvd3MvMjAwNS8wNS9pZGVudGl0eS9jbGFpbXMvbmFtZWlkZW50aWZpZXIiOiJkYTU3YzBiZS1jMjcyLTRhMGYtYWRiMi04MDlmZWE2NWUyYWEiLCJodHRwOi8vc2NoZW1hcy5taWNyb3NvZnQuY29tL3dzLzIwMDgvMDYvaWRlbnRpdHkvY2xhaW1zL2V4cGlyYXRpb24iOiJKYW4gU3VuIDI4IDIwMjQgMDc6MDM6NTIgQU0iLCJuYmYiOjE3MDU1NjE0MzIsImV4cCI6MTcwNjM5MzAzMiwiaXNzIjoiaHR0cDovLzE5Mi4xNjguMy41NTozMDAwIiwiYXVkIjoiaHR0cDovLzE5Mi4xNjguMy41NTozMDAwIn0.u7BEOUnmDRwo2DmE-qHsqqHl4yULXIZ5Ytj-ewrW66Y'; // Isi dengan token Anda
+
+    function fetchData() {
+        fetch(api_url, {
+          method: 'GET',
+          headers: {
+            'Authorization': 'Bearer ' + token
+          }
+        })
+        .then(response => response.json())
+        .then(data => {
+          // Hapus semua baris yang ada
+          $("#tableBody").empty();
+
+          // Inisialisasi variabel untuk menghitung rata-rata
+          var sumWindSpeed = 0;
+          var countWindSpeed = 0;
+          var interval = 60000; // 1 menit dalam milidetik
+          var currentIntervalStart = new Date();  // Waktu saat ini
+          var currentIntervalEnd = new Date(currentIntervalStart.getTime() - interval); // Waktu satu menit ke belakang
+
+          // Loop data dan tambahkan ke tabel
+          data.data.forEach(sensor => {
+            var dateTime = new Date(sensor.dateTime);
+
+            // Hitung rata-rata kecepatan angin per 1 menit
+            if (dateTime <= currentIntervalEnd) {
+              sumWindSpeed += sensor["Anemometer Speed 2D"];
+              countWindSpeed++;
+            } else {
+              // Tambahkan rata-rata ke tabel
+              if (countWindSpeed > 0) {
+                var averageWindSpeedMetersPerSecond = sumWindSpeed / countWindSpeed;
+                var averageWindSpeedKilometersPerHour = averageWindSpeedMetersPerSecond * 3.6;
+
+                var row = "<tr>";
+                row += "<td>" + currentIntervalStart.toLocaleString() + "</td>";
+                row += "<td>" + currentIntervalEnd.toLocaleString() + "</td>";
+                row += "<td>" + averageWindSpeedMetersPerSecond.toFixed(2) + "</td>";
+                row += "<td>" + averageWindSpeedKilometersPerHour.toFixed(2) + "</td>";
+                row += "</tr>";
+                $("#tableBody").append(row);
+              }
+
+              // Pindah ke interval berikutnya
+              currentIntervalStart = new Date(currentIntervalEnd.getTime());
+              currentIntervalEnd = new Date(currentIntervalStart.getTime() - interval);
+
+              // Reset variabel untuk interval baru
+              sumWindSpeed = sensor["Anemometer Speed 2D"];
+              countWindSpeed = 1;
+            }
+          });
+
+          // Tambahkan rata-rata terakhir ke tabel
+          if (countWindSpeed > 0) {
+            var averageWindSpeedMetersPerSecond = sumWindSpeed / countWindSpeed;
+            var averageWindSpeedKilometersPerHour = averageWindSpeedMetersPerSecond * 3.6;
+
+            var row = "<tr>";
+            row += "<td>" + currentIntervalStart.toLocaleString() + "</td>";
+            row += "<td>" + currentIntervalEnd.toLocaleString() + "</td>";
+            row += "<td>" + averageWindSpeedMetersPerSecond.toFixed(2) + "</td>";
+            row += "<td>" + averageWindSpeedKilometersPerHour.toFixed(2) + "</td>";
+            row += "</tr>";
+            $("#tableBody").append(row);
+          }
+        })
+        .catch(error => {
+          console.error('Gagal mendapatkan data:', error);
+        })
+        .finally(() => {
+          // Atur timeout sebelum melakukan permintaan GET berikutnya (dalam milidetik)
+          setTimeout(fetchData, 1000);
+        });
+    }
+
+    // Panggil fungsi fetchData untuk pertama kali
+    fetchData();
+</script>
+
+</body>
+</html>
