@@ -21,16 +21,16 @@
     <style type="text/css">
       body {
         font-family: 'Noto Sans KR', sans-serif;
+        font-weight: 900;
       }
 
       .weather__card h2 {
-        font-size:380px;
-        font-weight:700;
+        font-size:320px;
         color: #FFFF00;
         line-height: 1.5;
       }
       .weather__card h3 {
-        font-size: 210px;
+        font-size: 200px;
         font-weight: 600;
         line-height: .8;
         color: #00FF00;
@@ -70,7 +70,7 @@
                           <div class="d-flex flex-row justify-content-center align-items-center">
                               <div class="p-1">
                                   <h3>Kecepatan Angin</h3>
-                                  <h2><span class="speed">10</span> <i class="fa-solid fa-wind"></i></h2>
+                                  <h2><span class="speed"></span> <i class="fa-solid fa-wind"></i></h2>
                                   <h4>km/jam</h4>
                               </div>
                           </div>
@@ -92,32 +92,89 @@
 
     <script type="text/javascript">
 
-      var appid = 'cbe5251478dbaad525f838e3007a9f8d';
-      var city = 'Poka';
-
-      $(document).ready(function() {
-
-        function getDataWind() {
-          $.getJSON("https://api.openweathermap.org/data/2.5/weather?q="+city+"&appid="+appid+"", function(result){
-              var kph = result.wind.speed*3600/1000;
-              var final = kph.toFixed(1);
-            $('.speed').text(final);
-          });
-        }
-
-        getDataWind();
-
-        setInterval(function(){
-          getDataWind()
-        }, 500000);
-
-      });
-
       var myCarousel = document.querySelector('#crs');
 
       var carousel = new bootstrap.Carousel(myCarousel, {
-        interval: 5000,
+        interval: 2000,
       });
+
+
+      var api_url = 'http://36.89.95.146:5001/api/Data/648ad209761047d6a16aed60/sensors/last/08169466636709623LAN011';
+      var token = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJJZCI6IjY1MmU0MzgzNjc3ZjY4MTVlODA1MmM1OSIsImh0dHA6Ly9zY2hlbWFzLnhtbHNvYXAub3JnL3dzLzIwMDUvMDUvaWRlbnRpdHkvY2xhaW1zL2VtYWlsYWRkcmVzcyI6ImFkbWluIiwiaHR0cDovL3NjaGVtYXMueG1sc29hcC5vcmcvd3MvMjAwNS8wNS9pZGVudGl0eS9jbGFpbXMvbmFtZWlkZW50aWZpZXIiOiJkYTU3YzBiZS1jMjcyLTRhMGYtYWRiMi04MDlmZWE2NWUyYWEiLCJodHRwOi8vc2NoZW1hcy5taWNyb3NvZnQuY29tL3dzLzIwMDgvMDYvaWRlbnRpdHkvY2xhaW1zL2V4cGlyYXRpb24iOiJKYW4gU3VuIDI4IDIwMjQgMDc6MDM6NTIgQU0iLCJuYmYiOjE3MDU1NjE0MzIsImV4cCI6MTcwNjM5MzAzMiwiaXNzIjoiaHR0cDovLzE5Mi4xNjguMy41NTozMDAwIiwiYXVkIjoiaHR0cDovLzE5Mi4xNjguMy41NTozMDAwIn0.u7BEOUnmDRwo2DmE-qHsqqHl4yULXIZ5Ytj-ewrW66Y';
+
+      function fetchData() {
+        $.ajax({
+          url: api_url,
+          headers: {
+            'Authorization': 'Bearer ' + token
+          },
+          method: 'GET',
+          success: function(response) {
+            updateTable(response);
+          },
+          error: function(error) {
+            console.error('Error fetching data:', error);
+          }
+        });
+      }
+
+      function updateTable(response) {
+        var windtext = $('.weather__card .speed');
+        windtext.empty(); // Clear existing 
+
+        if (response.status === 'Success!' && response.data) {
+          // Filter data within the last 5 minute
+          var oneMinuteAgo = Date.now() - 300000; // 5 minute in milliseconds
+          var filteredData = response.data.filter(function(item) {
+            return item.dateTime >= oneMinuteAgo;
+          });
+
+          // Calculate average wind speed (m/s) and direction
+          var averageSpeed = calculateAverageSpeed(filteredData);
+          var averageDirection = calculateAverageDirection(filteredData).toFixed(1);
+
+          // Display the result
+          windtext.append(convertToKmPerHour(averageSpeed));
+
+        } else {
+          console.error('Invalid response format');
+        }
+      }
+
+      function calculateAverageSpeed(data) {
+        if (data.length === 0) {
+          return null;
+        }
+
+        var totalSpeed = data.reduce(function(sum, item) {
+          return sum + item['Anemometer Speed 2D'];
+        }, 0);
+
+        return totalSpeed / data.length;
+      }
+
+      function calculateAverageDirection(data) {
+        if (data.length === 0) {
+          return null;
+        }
+
+        var totalDirection = data.reduce(function(sum, item) {
+          return sum + item['Anemometer Direction'];
+        }, 0);
+
+        return totalDirection / data.length;
+      }
+
+      function convertToKmPerHour(speedInMeterPerSecond) {
+        // 1 m/s = 3.6 km/h
+        return (speedInMeterPerSecond * 3.6).toFixed(2);
+      }
+
+      // Fetch data every 5 seconds (adjust the interval as needed)
+      setInterval(fetchData, 5000);
+
+      // Initial fetch when the page loads
+      fetchData();
 
     </script>
     
